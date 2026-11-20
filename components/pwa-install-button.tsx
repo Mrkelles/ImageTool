@@ -1,7 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Download, PlusSquare, Share, Smartphone, WifiOff, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import {
+  Download,
+  MoreVertical,
+  PlusSquare,
+  Share,
+  Smartphone,
+  WifiOff,
+  X,
+} from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useOnlineStatus, usePWAInstall } from '@/hooks/use-pwa-install';
 
@@ -15,9 +24,16 @@ export function PWAInstallButton({
   onAfterAction,
 }: PWAInstallButtonProps) {
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
-  const [showIOSGuide, setShowIOSGuide] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
+  // Automatically suppress once running in installed standalone mode
   if (isInstalled) {
+    return null;
+  }
+
+  // Always show in the mobile "More" slide-in menu; on headers show when prompt or iOS is detected
+  const showButton = variant === 'sheet' || isInstallable || isIOS;
+  if (!showButton) {
     return null;
   }
 
@@ -25,15 +41,98 @@ export function PWAInstallButton({
     if (isInstallable) {
       await install();
       onAfterAction?.();
-    } else if (isIOS) {
-      setShowIOSGuide(true);
+    } else {
+      setShowGuide(true);
     }
   };
 
-  const showButton = isInstallable || isIOS;
-  if (!showButton) {
-    return null;
-  }
+  const guideModal = (
+    <AnimatePresence>
+      {showGuide && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.16 }}
+          className="fixed inset-0 z-[60] flex h-dvh w-full items-center justify-center overflow-y-auto bg-black/55 p-4 backdrop-blur-xs"
+          onClick={() => setShowGuide(false)}
+        >
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label={isIOS ? 'Install on iPhone or iPad' : 'Install ImageTools App'}
+            initial={{ opacity: 0, y: 12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.96 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            onClick={(e) => e.stopPropagation()}
+            className="my-auto max-h-[85dvh] w-full max-w-sm overflow-y-auto rounded-2xl border border-[#dde3d8] bg-white p-6 shadow-xl dark:border-[#2a3a2f] dark:bg-[#16201b]"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="font-display text-lg font-bold text-[#16211a] dark:text-[#eef4ef]">
+                  {isIOS ? 'Install on iPhone or iPad' : 'Install ImageTools App'}
+                </h3>
+                <p className="mt-1 text-sm text-[#5b6b60] dark:text-[#a7b8ac]">
+                  Add ImageTools to your home screen to launch it like a native app.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowGuide(false)}
+                aria-label="Close install instructions"
+                className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-lg text-[#5b6b60] hover:bg-[#eef1ea] dark:text-[#a7b8ac] dark:hover:bg-[#1e2b23]"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {isIOS ? (
+              <ol className="mt-5 space-y-3 text-sm text-[#16211a] dark:text-[#eef4ef]">
+                <li className="flex items-center gap-3 rounded-xl bg-[#f6f7f4] p-3 dark:bg-[#1e2b23]">
+                  <Share className="h-5 w-5 shrink-0 text-[#0f766e] dark:text-[#2dd4bf]" />
+                  <span>
+                    1. Tap the <strong>Share</strong> icon in Safari&apos;s toolbar.
+                  </span>
+                </li>
+                <li className="flex items-center gap-3 rounded-xl bg-[#f6f7f4] p-3 dark:bg-[#1e2b23]">
+                  <PlusSquare className="h-5 w-5 shrink-0 text-[#0f766e] dark:text-[#2dd4bf]" />
+                  <span>
+                    2. Scroll down and tap <strong>Add to Home Screen</strong>.
+                  </span>
+                </li>
+              </ol>
+            ) : (
+              <ol className="mt-5 space-y-3 text-sm text-[#16211a] dark:text-[#eef4ef]">
+                <li className="flex items-center gap-3 rounded-xl bg-[#f6f7f4] p-3 dark:bg-[#1e2b23]">
+                  <MoreVertical className="h-5 w-5 shrink-0 text-[#0f766e] dark:text-[#2dd4bf]" />
+                  <span>
+                    <strong>Android / Chrome:</strong> Open the browser menu and tap{' '}
+                    <strong>Install app</strong> or <strong>Add to Home screen</strong>.
+                  </span>
+                </li>
+                <li className="flex items-center gap-3 rounded-xl bg-[#f6f7f4] p-3 dark:bg-[#1e2b23]">
+                  <Share className="h-5 w-5 shrink-0 text-[#0f766e] dark:text-[#2dd4bf]" />
+                  <span>
+                    <strong>iPhone / iPad Safari:</strong> Tap <strong>Share</strong>, then{' '}
+                    <strong>Add to Home Screen</strong>.
+                  </span>
+                </li>
+              </ol>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setShowGuide(false)}
+              className="mt-5 min-h-[44px] w-full rounded-xl bg-[#0f766e] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#134e4a] dark:bg-[#2dd4bf] dark:text-[#06231f]"
+            >
+              Got it
+            </button>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 
   return (
     <>
@@ -45,7 +144,7 @@ export function PWAInstallButton({
         >
           <span className="flex items-center gap-2.5">
             <Smartphone className="h-4 w-4 shrink-0" />
-            <span>{isIOS ? 'Add to Home Screen (iOS)' : 'Install ImageTools App'}</span>
+            <span>Install App</span>
           </span>
           <Download className="h-4 w-4 shrink-0" />
         </button>
@@ -70,69 +169,7 @@ export function PWAInstallButton({
         </button>
       )}
 
-      <AnimatePresence>
-        {showIOSGuide && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.16 }}
-            className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 backdrop-blur-xs sm:items-center"
-            onClick={() => setShowIOSGuide(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 16, scale: 0.98 }}
-              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm rounded-2xl border border-[#dde3d8] bg-white p-6 shadow-xl dark:border-[#2a3a2f] dark:bg-[#16201b]"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-lg font-bold text-[#16211a] dark:text-[#eef4ef]">
-                    Install on iPhone or iPad
-                  </h3>
-                  <p className="mt-1 text-sm text-[#5b6b60] dark:text-[#a7b8ac]">
-                    Launch ImageTools directly from your home screen in standalone app mode.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowIOSGuide(false)}
-                  aria-label="Close install instructions"
-                  className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-lg text-[#5b6b60] hover:bg-[#eef1ea] dark:text-[#a7b8ac] dark:hover:bg-[#1e2b23]"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <ol className="mt-5 space-y-3 text-sm text-[#16211a] dark:text-[#eef4ef]">
-                <li className="flex items-center gap-3 rounded-xl bg-[#f6f7f4] p-3 dark:bg-[#1e2b23]">
-                  <Share className="h-5 w-5 shrink-0 text-[#0f766e] dark:text-[#2dd4bf]" />
-                  <span>
-                    1. Tap the <strong>Share</strong> icon in Safari&apos;s toolbar.
-                  </span>
-                </li>
-                <li className="flex items-center gap-3 rounded-xl bg-[#f6f7f4] p-3 dark:bg-[#1e2b23]">
-                  <PlusSquare className="h-5 w-5 shrink-0 text-[#0f766e] dark:text-[#2dd4bf]" />
-                  <span>
-                    2. Scroll down and tap <strong>Add to Home Screen</strong>.
-                  </span>
-                </li>
-              </ol>
-
-              <button
-                type="button"
-                onClick={() => setShowIOSGuide(false)}
-                className="mt-5 min-h-[44px] w-full rounded-xl bg-[#0f766e] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#134e4a] dark:bg-[#2dd4bf] dark:text-[#06231f]"
-              >
-                Got it
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {typeof document !== 'undefined' ? createPortal(guideModal, document.body) : null}
     </>
   );
 }
