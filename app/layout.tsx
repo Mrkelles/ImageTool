@@ -1,26 +1,31 @@
 import type { Metadata, Viewport } from 'next';
-import { IBM_Plex_Mono, IBM_Plex_Sans, Sora } from 'next/font/google';
+import localFont from 'next/font/local';
 import { AppShell } from '@/components/app-shell';
 import { ThemeProvider } from '@/components/theme-provider';
 import './globals.css';
 
-const sora = Sora({
-  subsets: ['latin'],
-  weight: ['600', '700', '800'],
+const sora = localFont({
+  src: './fonts/sora-latin.woff2',
+  weight: '600 800',
+  style: 'normal',
   variable: '--font-sora',
   display: 'swap',
 });
 
-const ibmPlexSans = IBM_Plex_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+const ibmPlexSans = localFont({
+  src: './fonts/ibm-plex-sans-latin.woff2',
+  weight: '400 700',
+  style: 'normal',
   variable: '--font-ibm-plex-sans',
   display: 'swap',
 });
 
-const ibmPlexMono = IBM_Plex_Mono({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
+const ibmPlexMono = localFont({
+  src: [
+    { path: './fonts/ibm-plex-mono-400.woff2', weight: '400', style: 'normal' },
+    { path: './fonts/ibm-plex-mono-500.woff2', weight: '500', style: 'normal' },
+    { path: './fonts/ibm-plex-mono-600.woff2', weight: '600', style: 'normal' },
+  ],
   variable: '--font-ibm-plex-mono',
   display: 'swap',
 });
