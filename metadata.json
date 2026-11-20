@@ -1,0 +1,6 @@
+{
+  "name": "ImageTools",
+  "description": "Free browser-based image converter (JPG, PNG, WebP, AVIF, ICO, SVG), Image to PDF builder, and honest Image Compressor. 100% local processing with no uploads.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

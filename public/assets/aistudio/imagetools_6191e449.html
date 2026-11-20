@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="color-scheme" content="light dark"/>
+<meta name="description" content="ImageTools — free browser-based image converter, image to PDF and image compressor. No uploads, no sign-up. Convert JPG, PNG, WebP, AVIF and SVG locally."/>
+<link rel="icon" href="data:,"/>
+<title>ImageTools — Convert, Compress &amp; PDF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--bg:#f6f7f4;--surface:#fff;--surface2:#eef1ea;--ink:#16211a;--muted:#5b6b60;--line:#dde3d8;--brand:#0f766e;--brand2:#134e4a;--accent:#e8b33d;--danger:#b42318;--ok:#067647;--radius:14px;--shadow:0 10px 30px rgba(20,40,30,.08)}
+[data-theme="dark"]{--bg:#0e1512;--surface:#16201b;--surface2:#1e2b23;--ink:#eef4ef;--muted:#a7b8ac;--line:#2a3a2f;--brand:#2dd4bf;--brand2:#99f6e4;--shadow:0 10px 30px rgba(0,0,0,.35)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;font-family:"IBM Plex Sans",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+h1,h2,h3{font-family:Sora,system-ui,sans-serif;line-height:1.15;margin:0 0 .5rem}
+a{color:var(--brand)}button,[role="button"],select,summary,input:not([type=checkbox],[type=radio]){min-height:2.25rem}
+button{cursor:pointer;font:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+header{position:sticky;top:0;z-index:50;background:var(--surface);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;gap:14px;padding:10px 0;flex-wrap:wrap}
+.logo{font-family:Sora;font-weight:800;font-size:1.25rem;color:var(--ink);text-decoration:none}.logo span{color:var(--brand)}
+.navlinks{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.navlinks a,.dropbtn{padding:9px 12px;border-radius:9px;color:var(--ink);text-decoration:none;font-weight:600;font-size:.95rem;background:none;border:0}
+.navlinks a:hover,.dropbtn:hover,.navlinks a.active{background:var(--surface2)}
+.dropdown{position:relative;display:inline-flex;align-items:center;flex-wrap:wrap}
+.dropdown:hover .menu{display:grid}
+.conv-chevron{padding:9px 7px 9px 2px!important;font-size:.85rem;line-height:1}
+.menu{position:absolute;top:110%;left:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px;width:min(680px,92vw);display:none;grid-template-columns:repeat(4,1fr);gap:14px;z-index:60}
+.dropdown.open .menu,.dropdown:focus-within .menu{display:grid}
+.menu h4{margin:0 0 6px;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.menu a{display:block;padding:5px 6px;font-size:.9rem}
+.menu .all{grid-column:1/-1;border-top:1px solid var(--line);padding-top:10px;font-weight:700}
+.spacer{flex:1}.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-weight:700;color:var(--ink)}
+.burger{display:none}
+.hero{padding:52px 0 28px}
+.hero h1{font-size:clamp(2rem,5vw,3.4rem);max-width:16ch}
+.hero p{font-size:1.12rem;color:var(--muted);max-width:62ch}
+.pill{display:inline-block;background:var(--surface2);border:1px solid var(--line);padding:5px 12px;border-radius:999px;font-size:.85rem;font-weight:700;margin-bottom:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:22px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}
+.card .tag{font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--brand)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--brand);color:#fff;border:0;border-radius:10px;padding:11px 18px;font-weight:700;text-decoration:none}
+[data-theme="dark"] .btn{color:#06231f}
+.btn.secondary{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.mini{padding:6px 12px;min-height:2rem;font-size:.88rem}
+section.block{padding:30px 0}
+.drop{border:2px dashed var(--line);background:var(--surface);border-radius:16px;padding:34px 20px;text-align:center;cursor:pointer}
+.drop.over{border-color:var(--brand);background:var(--surface2)}
+.drop .sampleline{margin-top:14px}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:18px 0}
+label.f{display:block;font-weight:700;font-size:.9rem}label.f small{display:block;font-weight:400;color:var(--muted)}
+select,input[type=text],input[type=number]{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit}
+input[type=range]{width:100%}
+.filegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin:16px 0}
+#convGrid,#pdfGrid,#compGrid,#convEmpty,#pdfEmpty,#compEmpty,#convErrors,#pdfErrors,#compErrors{scroll-margin-top:84px}
+.filecard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.filecard img{width:100%;height:130px;object-fit:contain;background:repeating-conic-gradient(#e5e5e5 0% 25%, #fff 0% 50%) 0 0/18px 18px;border-radius:8px}
+.filecard .rowbtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.meta{font-size:.85rem;color:var(--muted);word-break:break-all}
+.notice{background:#fff7e0;border:1px solid #ecd28a;color:#5c4300;border-radius:10px;padding:12px 14px;margin:12px 0}
+[data-theme="dark"] .notice{background:#2e2a12;color:#f3df9a}
+.good{background:#e7f6ee;border:1px solid #9fd8bb;color:#14532d;border-radius:10px;padding:12px 14px;margin:12px 0}
+[data-theme="dark"] .good{background:#12312a;color:#a7e8c8;border-color:#1f5142}
+.err{background:#fdecea;border:1px solid #f2b8b0;color:#7a1f16;border-radius:10px;padding:10px 12px;margin:8px 0;font-size:.92rem}
+[data-theme="dark"] .err{background:#3d1712;color:#ffb4a8;border-color:#6e2a20}
+progress{width:100%;height:10px}
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:10px 0}
+footer{border-top:1px solid var(--line);margin-top:40px;padding:28px 0 40px;color:var(--muted);overflow-wrap:break-word}
+footer a{color:var(--muted);margin-right:14px;display:inline-block;padding:4px 0}
+footer .wrap{line-height:1.7}
+.view{display:none}.view.active{display:block}
+.cmp{position:relative;max-width:640px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.cmp img{width:100%;display:block;max-height:420px;object-fit:contain;background:#8882}
+.cmp .top{position:absolute;inset:0}.cmp .top img{height:100%}
+table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid var(--line);text-align:left}
+.kbd{font-size:.85rem;background:var(--surface2);padding:2px 7px;border-radius:6px}
+.empty{border:1px dashed var(--line);border-radius:12px;padding:18px;color:var(--muted);text-align:center;margin:16px 0}
+@media(max-width:820px){.grid3{grid-template-columns:1fr}.menu{grid-template-columns:1fr 1fr;position:static;box-shadow:none;width:100%;flex:0 0 100%}.navlinks{display:none;width:100%;flex-direction:column;align-items:stretch}.navlinks.show{display:flex}.burger{display:inline-flex}.dropdown{width:100%}.dropdown .dropbtn{flex:0 0 auto}}
+</style>
+</head>
+<body>
+<header><div class="wrap nav">
+<a class="logo" href="#/">Image<span>Tools</span></a>
+<button class="iconbtn burger" id="burger" aria-label="Menu">☰ Menu</button>
+<nav class="navlinks" id="navlinks" aria-label="Main">
+<a href="#/" data-nav="home">Home</a>
+<div class="dropdown" id="convDrop">
+<a href="#/convert" class="dropbtn" id="convLink" data-nav="convert">Image Converter</a><button class="dropbtn conv-chevron" id="convBtn" aria-haspopup="true" aria-expanded="false" aria-label="Show all conversion options" title="Show all conversion options">▾</button>
+<div class="menu" id="convMenu" role="menu"></div>
+</div>
+<a href="#/image-to-pdf" data-nav="pdf">Image to PDF</a>
+<a href="#/compress" data-nav="compress">Compress</a>
+<a href="#/about" data-nav="about">About</a>
+<a href="#/contact" data-nav="contact">Contact</a>
+</nav><div class="spacer"></div>
+<button class="iconbtn" id="themeBtn">🌙 Dark</button>
+</div></header>
+
+<main class="wrap">
+<!-- HOME : active by default so the page is never blank before/without JS routing -->
+<div class="view active" id="view-home">
+<div class="hero"><span class="pill">100% in your browser · No uploads · No sign-up</span>
+<h1>Convert, compress, and PDF your images — privately.</h1>
+<p>Three free tools that run entirely on your device. Your files never leave your browser, so there's nothing to upload, wait for, or worry about.</p>
+<p><a class="btn" href="#/convert">Start converting</a> <a class="btn secondary" href="#/compress">Compress an image</a></p></div>
+<div class="grid3">
+<article class="card"><div class="tag">Tool 01</div><h3>Image Converter</h3><p>Convert between JPG, PNG, WebP and AVIF — plus SVG as a source. 16 dedicated routes like <span class="kbd">JPG → PNG</span>, batch uploads, ZIP download.</p><a class="btn" href="#/convert">Open converter →</a></article>
+<article class="card"><div class="tag">Tool 02</div><h3>Image to PDF</h3><p>Combine many images into one tidy PDF — reorder with buttons or drag-and-drop, choose A4 / Letter / original size, margins, fit or fill.</p><a class="btn" href="#/image-to-pdf">Create a PDF →</a></article>
+<article class="card"><div class="tag">Tool 03</div><h3>Image Compressor</h3><p>Shrink files with a quality slider or genuine lossless modes, optional resizing, and a draggable before / after comparison with real savings.</p><a class="btn" href="#/compress">Compress images →</a></article>
+</div>
+<section class="block"><h2>How it works</h2><div class="grid3">
+<div class="card"><h3>1 · Drop your files</h3><p>Drag images in, tap the drop area to browse, paste from your clipboard, or use the built-in sample image to try a tool instantly.</p></div>
+<div class="card"><h3>2 · Pick your settings</h3><p>Format, quality, page size, resize limits — everything is adjustable before you process.</p></div>
+<div class="card"><h3>3 · Download instantly</h3><p>Results are generated locally with Canvas, PDF and ZIP libraries. Save files one by one or all as a ZIP.</p></div></div></section>
+<section class="block"><h2>Private by design</h2><p>There is no ImageTools server receiving your pictures. Processing uses your browser's own image, canvas and file APIs. Close the tab and the in-memory copies are gone. The only thing stored on your device is your light / dark theme choice, where your browser allows it. Read the full <a href="#/privacy">Privacy Policy</a>.</p></section>
+<section class="block"><h2>Frequently asked questions</h2>
+<details><summary><strong>Are my images uploaded anywhere?</strong></summary><p>No. All conversion, PDF generation and compression happen locally in your browser.</p></details>
+<details><summary><strong>Why isn't GIF supported?</strong></summary><p>GIF was deliberately excluded from this release to keep animated-frame handling honest rather than silently flattening animations.</p></details>
+<details><summary><strong>Can I convert a PNG to SVG?</strong></summary><p>No — turning pixels into vectors is tracing, a different process. SVG is supported as a <em>source</em>: SVG → JPG / PNG / WebP / AVIF.</p></details>
+<details><summary><strong>Why did AVIF fail in my browser?</strong></summary><p>Some browsers can decode AVIF but not encode it. When that happens ImageTools tells you plainly instead of returning a mislabelled file.</p></details>
+<details><summary><strong>Is lossless JPEG compression real?</strong></summary><p>Re-encoding a JPEG always loses a little. In lossless mode ImageTools will not pretend otherwise — see the note in the Compressor.</p></details>
+</section></div>
+
+<!-- CONVERT -->
+<div class="view" id="view-convert">
+<section class="block"><h1 id="convTitle">Image Converter</h1><p id="convDesc" style="color:var(--muted)">Convert JPG, PNG, WebP, AVIF and SVG images. Auto-detect is the default — mixed batches are welcome.</p>
+<div class="controls">
+<label class="f">Convert from<select id="fromSel"></select><small>Auto-detect reads each file's real format.</small></label>
+<label class="f">Convert to<select id="toSel"></select><small>Transparent → JPG gets a white background.</small></label>
+</div>
+<div class="drop" id="convDropZone" tabindex="0" role="button" aria-label="Add images to convert"><h3>Drop images here, or tap to browse</h3><p style="color:var(--muted)">or</p><button class="btn" id="convBrowse" type="button">Browse files</button><p class="meta">JPG · PNG · WebP · AVIF · SVG — max 30 MB per file. JFIF is treated as JPEG. You can also paste images from the clipboard.</p><p class="sampleline"><button class="btn secondary mini" id="convSample" type="button">No image handy? Use a sample image</button></p><input type="file" id="convFile" accept=".jpg,.jpeg,.jfif,.png,.webp,.avif,.svg,image/*" multiple hidden></div>
+<div id="convErrors"></div>
+<div style="margin:14px 0;display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="convGo" type="button">Convert images</button><button class="btn secondary" id="convZip" type="button" disabled>Download all as ZIP</button><button class="btn secondary" id="convClear" type="button">Clear all</button></div>
+<progress id="convProg" value="0" max="100" style="display:none"></progress>
+<div class="empty" id="convEmpty">No images yet. Drop, browse, paste, or use the sample image above — your files will appear here.</div>
+<div class="filegrid" id="convGrid"></div>
+</section></div>
+
+<!-- ALL CONVERTERS -->
+<div class="view" id="view-all"><section class="block"><h1>All converters</h1><p style="color:var(--muted)">16 dedicated conversion routes, generated from one format registry.</p><div id="allList"></div></section></div>
+
+<!-- PDF -->
+<div class="view" id="view-pdf"><section class="block"><h1>Image to PDF</h1><p style="color:var(--muted)">One image per page, in exactly the order you arrange. Use the ↑ ↓ buttons (or drag on desktop) to reorder.</p>
+<div class="drop" id="pdfDrop" tabindex="0" role="button" aria-label="Add images for the PDF"><h3>Drop images here, or tap to browse</h3><button class="btn" id="pdfBrowse" type="button">Browse files</button><p class="meta">JPG · PNG · WebP · AVIF · SVG</p><p class="sampleline"><button class="btn secondary mini" id="pdfSample" type="button">No image handy? Use a sample image</button></p><input type="file" id="pdfFile" accept=".jpg,.jpeg,.jfif,.png,.webp,.avif,.svg,image/*" multiple hidden></div>
+<div id="pdfErrors"></div>
+<div class="controls">
+<label class="f">Page size<select id="pdfSize"><option>A4</option><option>Letter</option><option>Original</option></select></label>
+<label class="f">Orientation<select id="pdfOrient"><option>Auto</option><option>Portrait</option><option>Landscape</option></select></label>
+<label class="f">Margins<select id="pdfMargin"><option>Normal</option><option>Small</option><option>None</option></select></label>
+<label class="f">Image fit<select id="pdfFit"><option value="fit">Fit to page</option><option value="fill">Fill page</option></select></label>
+<label class="f">Quality<select id="pdfQuality"><option value="0.92">High</option><option value="0.75">Standard</option></select></label>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0"><button class="btn" id="pdfGo" type="button">Create PDF</button><button class="btn secondary" id="pdfClear" type="button">Clear all</button></div>
+<div id="pdfResult"></div>
+<div class="empty" id="pdfEmpty">No images yet. Drop, browse, or use the sample image above — pages will appear here in order.</div>
+<div class="filegrid" id="pdfGrid"></div>
+</section></div>
+
+<!-- COMPRESS -->
+<div class="view" id="view-compress"><section class="block"><h1>Image Compressor</h1><p style="color:var(--muted)">Real savings, calculated from your actual files — never estimates.</p>
+<div class="drop" id="compDrop" tabindex="0" role="button" aria-label="Add images to compress"><h3>Drop images here, or tap to browse</h3><button class="btn" id="compBrowse" type="button">Browse files</button><p class="meta">JPG · PNG · WebP · AVIF · SVG (SVG is optimised as vector markup)</p><p class="sampleline"><button class="btn secondary mini" id="compSample" type="button">No image handy? Use a sample image</button></p><input type="file" id="compFile" accept=".jpg,.jpeg,.jfif,.png,.webp,.avif,.svg,image/*" multiple hidden></div>
+<div id="compErrors"></div>
+<div class="controls">
+<label class="f">Mode<select id="compMode"><option value="lossy">Lossy</option><option value="lossless">Lossless</option></select></label>
+<label class="f">Output format<select id="compOut"><option value="webp">WebP</option><option value="jpg">JPG</option><option value="png">PNG</option><option value="avif">AVIF</option></select></label>
+<label class="f">Quality <span id="qVal">80%</span><input type="range" id="compQ" min="10" max="100" value="80"><small>Lossy only. Smaller file ← → better quality</small></label>
+<label class="f">Max width (px, optional)<input type="number" id="compW" placeholder="e.g. 1600" min="1"></label>
+<label class="f">Max height (px, optional)<input type="number" id="compH" placeholder="e.g. 1200" min="1"></label>
+</div>
+<div class="notice" id="losslessNote" style="display:none"><strong>Honest lossless note:</strong> PNG output and lossless WebP (where the browser supports it) keep every pixel. JPEG has no lossless re-encode — choosing JPG in lossless mode will keep the original file untouched if it's already a JPEG, rather than mislabelling a lossy re-encode as “lossless”. SVG is optimised by stripping metadata, comments and redundant whitespace.</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0"><button class="btn" id="compGo" type="button">Compress images</button><button class="btn secondary" id="compZip" type="button" disabled>Download all as ZIP</button><button class="btn secondary" id="compClear" type="button">Clear all</button></div>
+<progress id="compProg" value="0" max="100" style="display:none"></progress>
+<div id="compSummary"></div>
+<div class="empty" id="compEmpty">No images yet. Drop, browse, or use the sample image above — results with before/after comparison will appear here.</div>
+<div id="compGrid"></div>
+</section></div>
+
+<!-- INFO PAGES -->
+<div class="view" id="view-about"><section class="block"><h1>About ImageTools</h1><p>ImageTools is a small, focused set of image utilities that run entirely in your web browser: a format converter with 16 dedicated routes, an image-to-PDF maker, and an image compressor.</p><p>It was built around three principles: your files stay on your device, results should be honest (real sizes, real savings, no fake “lossless” JPEG), and common jobs should take seconds — drop, choose, download.</p><h2>Supported formats</h2><table><tr><th>Format</th><th>Input</th><th>Output</th></tr><tr><td>JPG / JPEG (incl. JFIF)</td><td>Yes</td><td>Yes</td></tr><tr><td>PNG</td><td>Yes</td><td>Yes</td></tr><tr><td>WebP</td><td>Yes</td><td>Yes</td></tr><tr><td>AVIF</td><td>Yes</td><td>Yes, where the browser can encode it</td></tr><tr><td>SVG</td><td>Yes</td><td>No — vectorisation is out of scope</td></tr><tr><td>GIF</td><td colspan="2">Excluded from this release</td></tr></table></section></div>
+<div class="view" id="view-contact"><section class="block"><h1>Contact</h1><p>If a tool isn't working, the fastest check is to reload the page and try it again with the built-in sample image: <a href="#/convert">open the converter</a>, <a href="#/image-to-pdf">open Image to PDF</a>, or <a href="#/compress">open the compressor</a>. Each tool explains format or browser limits (for example, AVIF encoding) in place when it hits one.</p><p style="color:var(--muted)">Every tool works locally on your device, so you never need to send your images to anyone for help using ImageTools.</p></section></div>
+<div class="view" id="view-privacy"><section class="block"><h1>Privacy Policy</h1><p><strong>Local processing.</strong> Images you open in ImageTools are processed entirely in your browser using Canvas, File and PDF/ZIP libraries running on your device. They are not uploaded to, stored on, or transmitted to any ImageTools server — there is no image-processing backend.</p><p><strong>What's stored.</strong> Only your light/dark theme preference is saved in your browser's local storage, and only where the browser allows storage; if storage is blocked, the theme simply won't persist between visits. Image files and results live in tab memory only and disappear when you close the tab. Object URLs created for previews are revoked when files are removed.</p><p><strong>Downloads.</strong> Converted files, PDFs and ZIPs are generated on your device and saved through your browser's normal download mechanism.</p><p><strong>Third parties.</strong> The page loads library code (JSZip, jsPDF) and fonts from public CDNs; those providers may see a standard web request for those files, but never your images.</p></section></div>
+<div class="view" id="view-terms"><section class="block"><h1>Terms of Service</h1><p>ImageTools is provided free, as-is, for converting, compressing and combining your own images (or images you have the right to use). Because processing happens on your device, output quality and format support depend on your browser — AVIF encoding in particular varies.</p><p>You are responsible for the files you process and for keeping copies of originals. ImageTools is not liable for data loss, unsuitable output, or decisions made based on compressed or converted files. Don't use the tools to infringe anyone's rights.</p></section></div>
+<div class="view" id="view-404"><section class="block"><h1>That conversion doesn't exist</h1><p id="nfText" style="color:var(--muted)">This combination isn't a valid ImageTools route.</p><p><a class="btn" href="#/convert">Go to the general converter</a> <a class="btn secondary" href="#/convert/all">View all converters</a></p></section></div>
+</main>
+<footer><div class="wrap"><strong style="color:var(--ink)">ImageTools</strong> — processed locally, always.<br><br><a href="#/">Home</a><a href="#/convert">Converter</a><a href="#/convert/all">All converters</a><a href="#/image-to-pdf">Image to PDF</a><a href="#/compress">Compress</a><a href="#/about">About</a><a href="#/contact">Contact</a><a href="#/privacy">Privacy</a><a href="#/terms">Terms</a><p>© 2026 ImageTools. No accounts, no uploads, no tracking of your images.</p></div></footer>
+
+<script>
+/* ImageTools — hardened build.
+   Every section is initialised independently inside try/catch so that ONE
+   failing feature (e.g. blocked localStorage in a sandboxed frame, a blocked
+   CDN library, an old browser API) can never take the whole app down. */
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+/* Safe storage: localStorage throws a SecurityError in some embedded /
+   sandboxed contexts. Fall back to in-memory storage instead of crashing. */
+var store={_m:{},
+ get:function(k){try{return window.localStorage.getItem(k)}catch(e){return (k in this._m)?this._m[k]:null}},
+ set:function(k,v){try{window.localStorage.setItem(k,v)}catch(e){this._m[k]=v}}};
+function logErr(where,e){try{console.error('[ImageTools] '+where+':',e)}catch(_){}}
+
+/* ---------- Registry ---------- */
+var INPUTS=['jpg','png','webp','avif','svg'], OUTPUTS=['jpg','png','webp','avif'];
+var MIME={jpg:'image/jpeg',png:'image/png',webp:'image/webp',avif:'image/avif',svg:'image/svg+xml'};
+var LABEL={jpg:'JPG',png:'PNG',webp:'WebP',avif:'AVIF',svg:'SVG'};
+var ROUTES=[]; INPUTS.forEach(function(f){OUTPUTS.forEach(function(t){if(f!==t)ROUTES.push({from:f,to:t,slug:f+'-to-'+t});});});
+function fmtBytes(b){if(b==null)return'—';if(b<1024)return b+' B';if(b<1048576)return (b/1024).toFixed(1)+' KB';return (b/1048576).toFixed(2)+' MB'}
+function baseName(n){return n.replace(/\.[^.]+$/,'')}
+
+/* ---------- Theme (isolated) ---------- */
+var theme='light';
+try{
+ theme=store.get('imagetools-theme');
+ if(!theme){theme=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'}
+ var applyTheme=function(){document.documentElement.setAttribute('data-theme',theme);var b=$('themeBtn');if(b)b.textContent=theme==='dark'?'☀️ Light':'🌙 Dark'};
+ $('themeBtn').onclick=function(){theme=theme==='dark'?'light':'dark';store.set('imagetools-theme',theme);applyTheme()};
+ applyTheme();
+}catch(e){logErr('theme',e);try{document.documentElement.setAttribute('data-theme','light')}catch(_){}}
+try{$('burger').onclick=function(){$('navlinks').classList.toggle('show')}}catch(e){logErr('burger',e)}
+
+/* ---------- Routing ---------- */
+function show(view){document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active')});var el=$('view-'+view);if(el)el.classList.add('active');try{var map={home:'home',convert:'convert',all:'convert',pdf:'pdf',compress:'compress',about:'about',contact:'contact'};var key=map[view];document.querySelectorAll('[data-nav]').forEach(function(a){a.classList.toggle('active',a.getAttribute('data-nav')===key)})}catch(e){}try{window.scrollTo(0,0)}catch(e){}}
+function closeAllNav(){try{var nl=$('navlinks');if(nl)nl.classList.remove('show');var d=$('convDrop');if(d)d.classList.remove('open');var b=$('convBtn');if(b)b.setAttribute('aria-expanded','false')}catch(e){}}
+/* Explicit in-app navigation: every internal link switches the view itself
+   (instead of relying only on the hashchange event), closes the mobile menu
+   and the converter submenu, and works even when the target hash is already
+   the current one. This is what makes taps visibly do something everywhere —
+   header, hero, cards, converter menu, info pages and footer. */
+document.addEventListener('click',function(e){
+ try{
+  var t=e.target;var a=t&&t.closest?t.closest('a[href^="#/"]'):null;if(!a)return;
+  var href=a.getAttribute('href');if(!href||href==='#')return;
+  e.preventDefault();closeAllNav();
+  if(location.hash!==href){try{history.pushState(null,'',href)}catch(err){try{location.hash=href}catch(_){}}}
+  route();
+ }catch(err){logErr('nav-click',err)}
+});
+function setConvHeading(from,to){try{$('convTitle').textContent=from?LABEL[from]+' to '+LABEL[to]+' Converter':'Image Converter';$('convDesc').textContent=from?('Convert '+LABEL[from]+' images to '+LABEL[to]+' — right in your browser, dimensions preserved, no uploads.'):'Convert JPG, PNG, WebP, AVIF and SVG images. Auto-detect is the default — mixed batches are welcome.';document.title=(from?LABEL[from]+' to '+LABEL[to]+' Converter':'Image Converter')+' — ImageTools'}catch(e){logErr('heading',e)}}
+function route(){
+ try{
+  var h=(location.hash||'').replace(/^#\/?/,'');var parts=h.split('/').filter(Boolean);
+  if(parts.length===0)return show('home');
+  if(parts[0]==='convert'){
+   if(parts[1]==='all')return show('all');
+   if(!parts[1]){show('convert');setConvHeading($('fromSel').value==='auto'?null:$('fromSel').value,$('toSel').value);return}
+   var m=parts[1].match(/^([a-z]+)-to-([a-z]+)$/);var ok=m&&ROUTES.some(function(r){return r.slug===parts[1]});
+   if(!ok){$('nfText').textContent='“/convert/'+parts[1]+'” is not one of the 16 valid conversion routes (same-format and raster-to-SVG routes don\'t exist).';return show('404')}
+   $('fromSel').value=m[1];$('toSel').value=m[2];show('convert');setConvHeading(m[1],m[2]);return}
+  if(parts[0]==='image-to-pdf')return show('pdf');
+  if(parts[0]==='compress')return show('compress');
+  if(['about','contact','privacy','terms'].indexOf(parts[0])>=0)return show(parts[0]);
+  $('nfText').textContent='That page doesn\'t exist on ImageTools.';show('404');
+ }catch(e){logErr('route',e);show('home')}
+}
+window.addEventListener('hashchange',route);
+
+/* ---------- Converter menu + format selects (isolated) ---------- */
+try{
+ var html='';OUTPUTS.forEach(function(t){html+='<div><h4>Convert to '+LABEL[t]+'</h4>';ROUTES.filter(function(r){return r.to===t}).forEach(function(r){html+='<a role="menuitem" href="#/convert/'+r.slug+'">'+LABEL[r.from]+' → '+LABEL[r.to]+'</a>'});html+='</div>'});
+ html+='<a class="all" href="#/convert/all">View all converters →</a>';$('convMenu').innerHTML=html;
+ $('convBtn').onclick=function(e){e.stopPropagation();var d=$('convDrop');d.classList.toggle('open');$('convBtn').setAttribute('aria-expanded',d.classList.contains('open'))};
+ document.addEventListener('click',function(){$('convDrop').classList.remove('open')});
+ $('convMenu').addEventListener('click',function(){$('convDrop').classList.remove('open');$('navlinks').classList.remove('show')});
+ var all='';OUTPUTS.forEach(function(t){all+='<h3 style="margin-top:20px">Convert to '+LABEL[t]+'</h3><p>';ROUTES.filter(function(r){return r.to===t}).forEach(function(r){all+='<a href="#/convert/'+r.slug+'">'+LABEL[r.from]+' → '+LABEL[r.to]+'</a> &nbsp;·&nbsp; '});all+='</p>'});
+ $('allList').innerHTML=all;
+}catch(e){logErr('menu',e)}
+try{
+ var f='<option value="auto">Auto-detect</option>';INPUTS.forEach(function(x){f+='<option value="'+x+'">'+LABEL[x]+'</option>'});$('fromSel').innerHTML=f;
+ var t='';OUTPUTS.forEach(function(x){t+='<option value="'+x+'">'+LABEL[x]+'</option>'});$('toSel').innerHTML=t;$('toSel').value='png';
+ var syncFromUI=function(push){var from=$('fromSel').value,to=$('toSel').value;
+  if(from!=='auto'&&from===to){to=OUTPUTS.filter(function(o){return o!==from})[0];$('toSel').value=to}
+  if(from==='auto'){setConvHeading(null,to)}else{var slug=from+'-to-'+to;if(push!==false&&('#/convert/'+slug)!==location.hash)location.hash='#/convert/'+slug;setConvHeading(from,to)}};
+ $('fromSel').onchange=function(){syncFromUI(true)};$('toSel').onchange=function(){syncFromUI(true)};
+}catch(e){logErr('selects',e)}
+
+/* ---------- Lazy library loading with CDN fallback ---------- */
+function loadScript(src){return new Promise(function(res,rej){var s=document.createElement('script');s.src=src;s.onload=function(){res()};s.onerror=function(){rej(new Error('load failed'))};document.head.appendChild(s)})}
+async function ensureZip(){
+ if(window.JSZip)return true;
+ try{await loadScript('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js')}catch(e){}
+ return !!window.JSZip}
+async function ensurePdfLib(){
+ if(window.jspdf&&window.jspdf.jsPDF)return true;
+ try{await loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js')}catch(e){}
+ return !!(window.jspdf&&window.jspdf.jsPDF)}
+
+/* ---------- File reading helpers (with FileReader fallbacks) ---------- */
+function readBuf(file){
+ if(file.arrayBuffer)return file.arrayBuffer();
+ return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result)};r.onerror=function(){rej(new Error('read failed'))};r.readAsArrayBuffer(file)})}
+function readText(file){
+ if(file.text)return file.text();
+ return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result)};r.onerror=function(){rej(new Error('read failed'))};r.readAsText(file)})}
+
+/* ---------- Format detection (magic bytes) ---------- */
+function detectFormat(buf,name){
+ var b=new Uint8Array(buf);
+ if(b.length>3&&b[0]===0xFF&&b[1]===0xD8&&b[2]===0xFF)return'jpg';
+ if(b.length>4&&b[0]===0x89&&b[1]===0x50&&b[2]===0x4E&&b[3]===0x47)return'png';
+ if(b.length>12&&b[0]===0x52&&b[1]===0x49&&b[2]===0x46&&b[3]===0x46&&b[8]===0x57&&b[9]===0x45&&b[10]===0x42&&b[11]===0x50)return'webp';
+ var head='';for(var i=0;i<Math.min(b.length,64);i++)head+=String.fromCharCode(b[i]);
+ if(head.indexOf('ftyp')>=0&&(head.indexOf('avif')>=0||head.indexOf('avis')>=0))return'avif';
+ try{var text=new TextDecoder().decode(buf.slice(0,2048)).trim();if(text.indexOf('<svg')>=0)return'svg'}catch(e){}
+ var ext=(name.split('.').pop()||'').toLowerCase();if(ext==='jpeg'||ext==='jfif')return'jpg';if(INPUTS.indexOf(ext)>=0)return ext;return null}
+var MAX=30*1024*1024;
+function validateFiles(fileList,errBox,expectedFrom){
+ var out=[],errs=[];var files=Array.prototype.slice.call(fileList||[]);
+ if(!files.length)return Promise.resolve(out);
+ return Promise.all(files.map(function(fl){
+  if(fl.size>MAX){errs.push(fl.name+': over the 30 MB limit.');return null}
+  return readBuf(fl).then(function(buf){
+   var fmt=detectFormat(buf,fl.name);
+   if(!fmt){errs.push(fl.name+': unsupported or corrupt — content doesn\'t match JPG, PNG, WebP, AVIF or SVG.');return null}
+   if(expectedFrom&&expectedFrom!=='auto'&&fmt!==expectedFrom){errs.push(fl.name+': detected as '+LABEL[fmt]+' but this route expects '+LABEL[expectedFrom]+'.');return null}
+   return{file:fl,format:fmt,id:Math.random().toString(36).slice(2),url:URL.createObjectURL(fl),result:null,resultUrl:null,resultName:null,error:null}
+  }).catch(function(){errs.push(fl.name+': could not be read.');return null})
+ })).then(function(items){
+  items.forEach(function(x){if(x)out.push(x)});
+  var msg='';
+  if(out.length)msg+='<div class="good">Added '+out.length+' image'+(out.length===1?'':'s')+' — ready below.</div>';
+  msg+=errs.map(function(e){return '<div class="err">'+esc(e)+'</div>'}).join('');
+  errBox.innerHTML=msg;return out})}
+function showErr(errBox,text){errBox.innerHTML='<div class="err">'+esc(text)+'</div>'}
+/* After an upload finishes, move the view to the uploaded-images preview
+   so the user sees their images (not the drop zone they just used).
+   Waits for the render to land, respects reduced-motion, and offsets
+   for the sticky header via scroll-margin-top on the preview grids. */
+function scrollToPreview(el){
+ if(!el)return;
+ var done=false;
+ function tryScroll(){
+  if(done)return;done=true;
+  try{
+   var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+   if(el.scrollIntoView){el.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'})}
+   else{var y=el.getBoundingClientRect().top+(window.pageYOffset||0)-84;window.scrollTo(0,Math.max(0,y))}
+  }catch(e){
+   try{var y2=el.getBoundingClientRect().top+(window.pageYOffset||0)-84;window.scrollTo(0,Math.max(0,y2))}catch(_){}
+  }
+ }
+ if(window.requestAnimationFrame){try{requestAnimationFrame(function(){requestAnimationFrame(tryScroll)})}catch(e){}}
+ setTimeout(tryScroll,150);
+}
+
+/* ---------- Drop zones: drag, click-anywhere, keyboard, paste ---------- */
+function wireDrop(zone,input,onFiles){
+ zone.addEventListener('dragover',function(e){e.preventDefault();zone.classList.add('over')});
+ zone.addEventListener('dragleave',function(){zone.classList.remove('over')});
+ zone.addEventListener('drop',function(e){e.preventDefault();zone.classList.remove('over');if(e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files.length)onFiles(e.dataTransfer.files)});
+ zone.addEventListener('click',function(e){var t=e.target;if(t.closest&&t.closest('button,a,input,select,textarea,label'))return;input.click()});
+ zone.addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&e.target===zone){e.preventDefault();input.click()}});
+ input.addEventListener('change',function(){if(input.files&&input.files.length)onFiles(input.files);input.value=''});
+ zone._onFiles=onFiles}
+document.addEventListener('paste',function(e){
+ try{
+  if(!e.clipboardData||!e.clipboardData.files||!e.clipboardData.files.length)return;
+  var active=document.querySelector('.view.active');if(!active)return;
+  var zone=active.querySelector('.drop');if(zone&&zone._onFiles){e.preventDefault();zone._onFiles(e.clipboardData.files)}
+ }catch(err){logErr('paste',err)}});
+
+/* ---------- Sample image (generated locally, for instant testing) ---------- */
+function makeSampleFile(done){
+ try{
+  var c=document.createElement('canvas');c.width=1200;c.height=800;var x=c.getContext('2d');
+  var g=x.createLinearGradient(0,0,0,800);g.addColorStop(0,'#7dd3fc');g.addColorStop(0.6,'#e0f2fe');g.addColorStop(0.61,'#8fce9b');g.addColorStop(1,'#4d7c5f');
+  x.fillStyle=g;x.fillRect(0,0,1200,800);
+  x.fillStyle='#fbbf24';x.beginPath();x.arc(980,150,70,0,7);x.fill();
+  x.fillStyle='#64748b';x.beginPath();x.moveTo(0,490);x.lineTo(300,240);x.lineTo(560,490);x.closePath();x.fill();
+  x.fillStyle='#475569';x.beginPath();x.moveTo(380,490);x.lineTo(680,200);x.lineTo(980,490);x.closePath();x.fill();
+  x.fillStyle='#ffffff';x.font='700 54px sans-serif';x.fillText('ImageTools sample',48,92);
+  x.font='28px sans-serif';x.fillText('Generated in your browser, just for testing',48,142);
+  if(c.toBlob){c.toBlob(function(b){if(b){done(new File([b],'sample-image.png',{type:'image/png'}))}else{done(null)}},'image/png')}
+  else{done(null)}
+ }catch(e){logErr('sample',e);done(null)}}
+
+/* ---------- Image processing primitives ---------- */
+function loadImg(item){return new Promise(function(res,rej){var img=new Image();img.onload=function(){res(img)};img.onerror=function(){rej(new Error('This image could not be decoded by your browser.'))};img.src=item.url})}
+function canvasToBlob(c,type,q){return new Promise(function(res){if(c.toBlob){c.toBlob(function(b){res(b)},type,q)}else{try{var parts=c.toDataURL(type,q).split(',');var bin=atob(parts[1]);var arr=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);res(new Blob([arr],{type:type}))}catch(e){res(null)}}})}
+async function rasterise(item,targetW,targetH){
+ var img=await loadImg(item);
+ var w=img.naturalWidth||img.width||800,h=img.naturalHeight||img.height||600;
+ if(item.format==='svg'&&(!img.naturalWidth||!img.naturalHeight)){w=1024;h=768}
+ if(targetW||targetH){var sc=Math.min(targetW?targetW/w:Infinity,targetH?targetH/h:Infinity,1);if(isFinite(sc)&&sc>0){w=Math.max(1,Math.round(w*sc));h=Math.max(1,Math.round(h*sc))}}
+ var c=document.createElement('canvas');c.width=w;c.height=h;return{canvas:c,img:img,w:w,h:h}}
+async function convertOne(item,to){
+ var r=await rasterise(item);var ctx=r.canvas.getContext('2d');
+ if(to==='jpg'){ctx.fillStyle='#ffffff';ctx.fillRect(0,0,r.w,r.h)}
+ ctx.drawImage(r.img,0,0,r.w,r.h);
+ var blob=await canvasToBlob(r.canvas,MIME[to],0.92);
+ if(!blob||(blob.type&&blob.type!==MIME[to]&&to==='avif'))throw new Error('Your browser cannot encode '+LABEL[to]+' (AVIF encoding is not supported in every browser). Try PNG or WebP.');
+ return blob}
+function download(blob,name){
+ try{var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(url);a.remove()},1500)}catch(e){logErr('download',e)}}
+async function makeZip(entries){
+ if(!await ensureZip())return null;
+ var zip=new JSZip();var seen={};
+ entries.forEach(function(en){var n=en.name;if(seen[n])n=n.replace(/(\.[^.]+)?$/,function(m){return '-'+Math.random().toString(36).slice(2,6)+(m||'')});seen[n]=1;zip.file(n,en.blob)});
+ return zip.generateAsync({type:'blob'})}
+
+/* ---------- Converter ---------- */
+var convItems=[];
+function renderConv(){
+ var grid=$('convGrid');if(!grid)return;
+ $('convEmpty').style.display=convItems.length?'none':'block';
+ grid.innerHTML=convItems.map(function(it,i){
+  return '<div class="filecard"><img src="'+it.url+'" alt="Preview of '+esc(it.file.name)+'"><p><strong>'+esc(it.file.name)+'</strong></p><p class="meta">Detected: '+LABEL[it.format]+' · Original: '+fmtBytes(it.file.size)+(it.result?'<br>Converted: '+fmtBytes(it.result.size):'')+(it.error?'<br><span style="color:var(--danger)">'+esc(it.error)+'</span>':'')+'</p><div class="rowbtns">'+(it.resultUrl?'<a class="btn mini" href="'+it.resultUrl+'" download="'+esc(it.resultName||'converted')+'">Download</a>':'')+'<button class="btn secondary mini" type="button" data-rm="'+i+'">Remove</button></div></div>'}).join('');
+ grid.querySelectorAll('[data-rm]').forEach(function(b){b.onclick=function(){var idx=+b.getAttribute('data-rm');var it=convItems[idx];if(it){if(it.url)URL.revokeObjectURL(it.url);if(it.resultUrl)URL.revokeObjectURL(it.resultUrl)}convItems.splice(idx,1);renderConv()}});
+ $('convZip').disabled=!convItems.some(function(x){return x.result})}
+function addConvFiles(files){validateFiles(files,$('convErrors'),$('fromSel').value).then(function(items){convItems=convItems.concat(items);renderConv();if(items.length)scrollToPreview($('convGrid'));else if($('convErrors').innerHTML)scrollToPreview($('convErrors'))}).catch(function(e){logErr('conv-add',e);showErr($('convErrors'),'Something went wrong reading those files. Please try again.')})}
+try{
+ wireDrop($('convDropZone'),$('convFile'),addConvFiles);
+ $('convBrowse').onclick=function(){$('convFile').click()};
+ $('convSample').onclick=function(){makeSampleFile(function(fl){if(fl)addConvFiles([fl]);else showErr($('convErrors'),'Sample image could not be created in this browser.')})};
+ $('convClear').onclick=function(){convItems.forEach(function(x){if(x.url)URL.revokeObjectURL(x.url);if(x.resultUrl)URL.revokeObjectURL(x.resultUrl)});convItems=[];renderConv();$('convErrors').innerHTML=''};
+ $('convGo').onclick=async function(){
+  if(!convItems.length){showErr($('convErrors'),'Add at least one image first — drop, browse, paste, or use the sample image.');return}
+  var to=$('toSel').value;$('convProg').style.display='block';var done=0;
+  for(var i=0;i<convItems.length;i++){var it=convItems[i];it.error=null;
+   try{
+    if(it.format===to){it.error='Already '+LABEL[to]+' — skipped.';it.result=null}
+    else{it.result=await convertOne(it,to);if(it.resultUrl)URL.revokeObjectURL(it.resultUrl);it.resultUrl=URL.createObjectURL(it.result);it.resultName=baseName(it.file.name)+'.'+to}
+   }catch(e){it.error=e.message;it.result=null}
+   done++;$('convProg').value=done/convItems.length*100;renderConv()}
+  $('convProg').style.display='none';renderConv()};
+ $('convZip').onclick=async function(){
+  var entries=convItems.filter(function(x){return x.result}).map(function(x){return{name:x.resultName,blob:x.result}});
+  if(!entries.length)return;
+  var blob=await makeZip(entries);
+  if(!blob){showErr($('convErrors'),'The ZIP library could not be loaded — check your connection, or download the files one by one.');return}
+  download(blob,'imagetools.zip')};
+ renderConv();
+}catch(e){logErr('converter-init',e)}
+
+/* ---------- PDF ---------- */
+var pdfItems=[];
+function renderPdf(){
+ var grid=$('pdfGrid');if(!grid)return;
+ $('pdfEmpty').style.display=pdfItems.length?'none':'block';
+ grid.innerHTML=pdfItems.map(function(it,i){
+  return '<div class="filecard" draggable="true" data-idx="'+i+'"><img src="'+it.url+'" alt="Page '+(i+1)+' preview"><p><strong>Page '+(i+1)+'</strong> · '+esc(it.file.name)+'</p><p class="meta">'+LABEL[it.format]+' · '+fmtBytes(it.file.size)+'</p><div class="rowbtns"><button class="btn secondary mini" type="button" data-up="'+i+'" '+(i===0?'disabled':'')+'>↑ Earlier</button><button class="btn secondary mini" type="button" data-down="'+i+'" '+(i===pdfItems.length-1?'disabled':'')+'>↓ Later</button><button class="btn secondary mini" type="button" data-prm="'+i+'">Remove</button></div></div>'}).join('');
+ grid.querySelectorAll('[data-prm]').forEach(function(b){b.onclick=function(){var it=pdfItems[+b.getAttribute('data-prm')];if(it&&it.url)URL.revokeObjectURL(it.url);pdfItems.splice(+b.getAttribute('data-prm'),1);renderPdf()}});
+ grid.querySelectorAll('[data-up]').forEach(function(b){b.onclick=function(){var i=+b.getAttribute('data-up');if(i>0){var t=pdfItems[i-1];pdfItems[i-1]=pdfItems[i];pdfItems[i]=t;renderPdf()}}});
+ grid.querySelectorAll('[data-down]').forEach(function(b){b.onclick=function(){var i=+b.getAttribute('data-down');if(i<pdfItems.length-1){var t=pdfItems[i+1];pdfItems[i+1]=pdfItems[i];pdfItems[i]=t;renderPdf()}}});
+ var dragI=null;
+ grid.querySelectorAll('.filecard').forEach(function(card){
+  card.addEventListener('dragstart',function(){dragI=+card.getAttribute('data-idx')});
+  card.addEventListener('dragover',function(e){e.preventDefault()});
+  card.addEventListener('drop',function(e){e.preventDefault();var j=+card.getAttribute('data-idx');if(dragI===null||dragI===j)return;var mv=pdfItems.splice(dragI,1)[0];pdfItems.splice(j,0,mv);renderPdf()})})}
+function addPdfFiles(files){validateFiles(files,$('pdfErrors'),null).then(function(items){pdfItems=pdfItems.concat(items);renderPdf();if(items.length)scrollToPreview($('pdfGrid'));else if($('pdfErrors').innerHTML)scrollToPreview($('pdfErrors'))}).catch(function(e){logErr('pdf-add',e);showErr($('pdfErrors'),'Something went wrong reading those files. Please try again.')})}
+try{
+ wireDrop($('pdfDrop'),$('pdfFile'),addPdfFiles);
+ $('pdfBrowse').onclick=function(){$('pdfFile').click()};
+ $('pdfSample').onclick=function(){makeSampleFile(function(fl){if(fl)addPdfFiles([fl]);else showErr($('pdfErrors'),'Sample image could not be created in this browser.')})};
+ $('pdfClear').onclick=function(){pdfItems.forEach(function(x){if(x.url)URL.revokeObjectURL(x.url)});pdfItems=[];renderPdf();$('pdfResult').innerHTML='';$('pdfErrors').innerHTML=''};
+ $('pdfGo').onclick=async function(){
+  if(!pdfItems.length){showErr($('pdfErrors'),'Add at least one image first — drop, browse, or use the sample image.');return}
+  if(!await ensurePdfLib()){showErr($('pdfErrors'),'The PDF library could not be loaded — check your connection and try again.');return}
+  $('pdfErrors').innerHTML='';
+  try{
+   var jsPDF=window.jspdf.jsPDF;var marginMap={None:0,Small:10,Normal:20};var margin=marginMap[$('pdfMargin').value];
+   var quality=parseFloat($('pdfQuality').value);var sizeSel=$('pdfSize').value,orientSel=$('pdfOrient').value,fit=$('pdfFit').value;var doc=null;
+   for(var i=0;i<pdfItems.length;i++){
+    var it=pdfItems[i];var r=await rasterise(it);var ctx=r.canvas.getContext('2d');
+    ctx.fillStyle='#ffffff';ctx.fillRect(0,0,r.w,r.h);ctx.drawImage(r.img,0,0,r.w,r.h);
+    var data=r.canvas.toDataURL('image/jpeg',quality);
+    var pw,ph;if(sizeSel==='A4'){pw=210;ph=297}else if(sizeSel==='Letter'){pw=215.9;ph=279.4}else{pw=Math.max(50,r.w*25.4/96);ph=Math.max(50,r.h*25.4/96)}
+    var orient=orientSel==='Auto'?(r.w>r.h?'l':'p'):(orientSel==='Landscape'?'l':'p');
+    if(orient==='l'&&pw<ph){var tmp=pw;pw=ph;ph=tmp}if(orient==='p'&&ph<pw){var t2=pw;pw=ph;ph=t2}
+    if(!doc)doc=new jsPDF({unit:'mm',format:[pw,ph],orientation:orient});else doc.addPage([pw,ph],orient);
+    var aw=pw-margin*2,ah=ph-margin*2,ar=r.w/r.h,boxAr=aw/ah,iw,ih;
+    if(fit==='fit'){if(ar>boxAr){iw=aw;ih=aw/ar}else{ih=ah;iw=ah*ar}}else{if(ar>boxAr){ih=ah;iw=ah*ar}else{iw=aw;ih=aw/ar}}
+    doc.addImage(data,'JPEG',margin+(aw-iw)/2,margin+(ah-ih)/2,iw,ih)}
+   var blob=doc.output('blob');var url=URL.createObjectURL(blob);
+   $('pdfResult').innerHTML='<div class="good"><strong>imagetools.pdf</strong> created — '+pdfItems.length+' page(s), '+fmtBytes(blob.size)+'. <a href="'+url+'" download="imagetools.pdf"><strong>Download the PDF</strong></a></div>';
+  }catch(e){logErr('pdf-go',e);showErr($('pdfErrors'),'PDF creation failed: '+e.message)}};
+ renderPdf();
+}catch(e){logErr('pdf-init',e)}
+
+/* ---------- Compressor ---------- */
+var compItems=[];
+function renderComp(){
+ var grid=$('compGrid');if(!grid)return;
+ $('compEmpty').style.display=compItems.length?'none':'block';
+ grid.innerHTML=compItems.map(function(it,i){
+  var pct=it.result?Math.round((1-it.result.size/it.file.size)*100):null;
+  return '<div class="card" style="margin:12px 0"><p><strong>'+esc(it.file.name)+'</strong> <span class="meta">'+LABEL[it.format]+' · '+fmtBytes(it.file.size)+(it.result?' → '+fmtBytes(it.result.size)+' ('+(pct>=0?'saved '+pct+'%':'grew '+Math.abs(pct)+'% — settings kept quality high')+')':'')+'</span></p>'
+   +(it.note?'<div class="notice">'+esc(it.note)+'</div>':'')
+   +(it.error?'<div class="err">'+esc(it.error)+'</div>':'')
+   +(it.result&&it.format!=='svg'?'<div class="cmp"><img src="'+it.url+'" alt="Original"><div class="top"><img src="'+it.resultUrl+'" alt="Compressed" style="clip-path:inset(0 '+(100-(it.split||50))+'% 0 0)"></div></div><label class="f">Compare — drag to reveal compressed <input type="range" min="0" max="100" value="'+(it.split||50)+'" data-split="'+i+'"></label>':'')
+   +'<div class="rowbtns">'+(it.resultUrl?'<a class="btn mini" href="'+it.resultUrl+'" download="'+esc(it.outName||'compressed')+'">Download compressed</a>':'')+'<button class="btn secondary mini" type="button" data-crm="'+i+'">Remove</button></div></div>'}).join('');
+ grid.querySelectorAll('[data-crm]').forEach(function(b){b.onclick=function(){var it=compItems[+b.getAttribute('data-crm')];if(it){if(it.url)URL.revokeObjectURL(it.url);if(it.resultUrl)URL.revokeObjectURL(it.resultUrl)}compItems.splice(+b.getAttribute('data-crm'),1);renderComp()}});
+ grid.querySelectorAll('[data-split]').forEach(function(r){r.oninput=function(){compItems[+r.getAttribute('data-split')].split=+r.value;var card=r.closest('.card');var top=card?card.querySelector('.cmp .top img'):null;if(top)top.style.clipPath='inset(0 '+(100-r.value)+'% 0 0)'}});
+ $('compZip').disabled=!compItems.some(function(x){return x.result});
+ var totO=0,totC=0,has=false;compItems.forEach(function(x){if(x.result){has=true;totO+=x.file.size;totC+=x.result.size}});
+ $('compSummary').innerHTML=has?'<div class="good">Total: '+fmtBytes(totO)+' → <strong>'+fmtBytes(totC)+'</strong> ('+(totC<totO?'saved '+Math.round((1-totC/totO)*100)+'%':'no saving at these settings')+')</div>':''}
+function optimiseSvg(text){return text.replace(/<\?xml[^>]*\?>/g,'').replace(/<!--[\s\S]*?-->/g,'').replace(/<metadata[\s\S]*?<\/metadata>/g,'').replace(/>\s+</g,'><').replace(/\s{2,}/g,' ').trim()}
+function addCompFiles(files){validateFiles(files,$('compErrors'),null).then(function(items){compItems=compItems.concat(items);renderComp();if(items.length)scrollToPreview($('compGrid'));else if($('compErrors').innerHTML)scrollToPreview($('compErrors'))}).catch(function(e){logErr('comp-add',e);showErr($('compErrors'),'Something went wrong reading those files. Please try again.')})}
+try{
+ $('compQ').oninput=function(){$('qVal').textContent=$('compQ').value+'%'};
+ $('compMode').onchange=function(){$('losslessNote').style.display=$('compMode').value==='lossless'?'block':'none';$('compQ').disabled=$('compMode').value==='lossless'};
+ wireDrop($('compDrop'),$('compFile'),addCompFiles);
+ $('compBrowse').onclick=function(){$('compFile').click()};
+ $('compSample').onclick=function(){makeSampleFile(function(fl){if(fl)addCompFiles([fl]);else showErr($('compErrors'),'Sample image could not be created in this browser.')})};
+ $('compClear').onclick=function(){compItems.forEach(function(x){if(x.url)URL.revokeObjectURL(x.url);if(x.resultUrl)URL.revokeObjectURL(x.resultUrl)});compItems=[];renderComp();$('compErrors').innerHTML=''};
+ $('compGo').onclick=async function(){
+  if(!compItems.length){showErr($('compErrors'),'Add at least one image first — drop, browse, or use the sample image.');return}
+  var mode=$('compMode').value,out=$('compOut').value,q=+$('compQ').value/100,mw=parseInt($('compW').value)||null,mh=parseInt($('compH').value)||null;
+  $('compProg').style.display='block';var done=0;
+  for(var i=0;i<compItems.length;i++){var it=compItems[i];it.error=null;it.note=null;
+   try{
+    if(it.format==='svg'){var txt=await readText(it.file);var opt=optimiseSvg(txt);it.result=new Blob([opt],{type:'image/svg+xml'});it.outName=baseName(it.file.name)+'-optimised.svg'}
+    else if(mode==='lossless'&&out==='jpg'&&it.format==='jpg'){it.result=it.file;it.outName=it.file.name;it.note='Kept original JPEG untouched — a JPEG re-encode would be lossy, so no fake “lossless” copy was made.'}
+    else{
+     var targetOut=out;
+     if(mode==='lossless'){targetOut=(out==='webp')?'webp':'png'}
+     var r=await rasterise(it,mw,mh);var ctx=r.canvas.getContext('2d');
+     if(targetOut==='jpg'){ctx.fillStyle='#ffffff';ctx.fillRect(0,0,r.w,r.h)}
+     ctx.drawImage(r.img,0,0,r.w,r.h);
+     var blob=await canvasToBlob(r.canvas,MIME[targetOut],mode==='lossless'?(targetOut==='webp'?1:undefined):q);
+     if(!blob)throw new Error('Browser cannot encode '+LABEL[targetOut]+'.');
+     it.result=blob;it.outName=baseName(it.file.name)+'-compressed.'+targetOut}
+    if(it.resultUrl)URL.revokeObjectURL(it.resultUrl);
+    if(it.result)it.resultUrl=URL.createObjectURL(it.result);
+   }catch(e){it.error=e.message;it.result=null}
+   done++;$('compProg').value=done/compItems.length*100;renderComp()}
+  $('compProg').style.display='none';renderComp()};
+ $('compZip').onclick=async function(){
+  var entries=compItems.filter(function(x){return x.result}).map(function(x){return{name:x.outName,blob:x.result}});
+  if(!entries.length)return;
+  var blob=await makeZip(entries);
+  if(!blob){showErr($('compErrors'),'The ZIP library could not be loaded — check your connection, or download the files one by one.');return}
+  download(blob,'imagetools-compressed.zip')};
+ renderComp();
+}catch(e){logErr('compressor-init',e)}
+
+/* ---------- Initial route (home is already visible by default) ---------- */
+route();
+</script>
+</body></html>
